@@ -1,0 +1,5 @@
+#008
+FSAZ 2023-11-11
+拨号音频解密
+特征:音阶不同且有间隔的滴滴声
+解密:http://dialabc.com/sound/detect/index.html
