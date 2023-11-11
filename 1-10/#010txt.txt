@@ -1,0 +1,11 @@
+#007 gif隐写
+FSAZ 2023-11-11
+GIF由一帧帧的图片构成,每一帧的图片,多帧图片间的结合是隐藏图片的一种方式
+可以使用convert命令将其每一帧分割开来
+convert hack.gif hack.png
+GIF 文件每一帧间的时间间隔也可以隐藏信息
+通过identify命令打印出每一帧的时间间隔
+identify -format "%s %T \n" hack.gif
+对其的加密工具
+F5-steganography
+https://github.com/matthewgao/F5-steganography
