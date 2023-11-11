@@ -1,0 +1,41 @@
+#005
+FSAZ 2023-11-11
+参考:https://portswigger.net/web-security/prototype-pollution/javascript-prototypes-and-inheritance
+什么是原型污染
+原型污染是一个 JavaScript 漏洞，使攻击者能够将任意属性添加到全局对象原型中，然后这些属性可能被用户定义的对象继承
+JavaScript 原型和继承
+JavaScript 对象本质上只是称为“属性”的对的集合,有点类似于php序列化后的表示方法
+例如，以下对象可以表示用户：key:value
+const user =  {
+    username: "wiener",
+    userId: 01234,
+    isAdmin: false
+}
+可以使用点表示法或括号表示法来引用对象各自的键来访问对象的属性
+user.username     // "wiener"
+user['userId']    // 01234
+JavaScript 中的每个对象都链接到某种类型的另一个对象，称为其原型，一般情况下，JavaScript 会自动将新对象分配给其内置原型之一
+例如，字符串会自动分配内置的String.prototype(这里类似于"".__class__的原理)
+全局原型的更多示例：
+let myObject = {};
+Object.getPrototypeOf(myObject);    // Object.prototype
+let myString = "";
+Object.getPrototypeOf(myString);    // String.prototype
+let myArray = [];
+Object.getPrototypeOf(myArray);	    // Array.prototype
+let myNumber = 1;
+Object.getPrototypeOf(myNumber);    // Number.prototype
+对象在默认情况下会继承原型所有属性，除非他们已经拥有了相同的属性
+内置原型为处理基本数据类型提供了有用的属性和方法。例如，对象有一个方法。因此，所有字符串都自动具有一个现成的方法，用于将它们转换为小写。这样，开发人员就不用手动将这种行为添加到他们创建的每个新字符串中。‘’‘String.prototypetoLowerCase（）‘’‘
+每当你引用一个对象的属性时，JavaScript 引擎首先会尝试直接在对象本身上访问它。如果对象没有匹配的属性，则 JavaScript 引擎会在对象的原型上查找它。给定以下对象，这使您能够引用 ，例如：myObject.propertyA
+简单来说就是即使是空对象也会默认继承一些魔术方法与函数
+请注意，一个对象的原型只是另一个对象，它也应该有自己的原型，依此类推。由于 JavaScript 中的几乎所有内容都是引擎盖下的对象，因此该链最终会回到顶层，其原型只是 ：Object.prototype
+使用 __proto__ 访问对象的原型
+与任何属性一样，您可以使用括号或点表示法进行访问：__proto__
+username.__proto__
+username['__proto__']
+类似于"".__class__
+修改原型
+尽管这通常被认为是不好的做法，但可以像修改任何其他对象一样修改 JavaScript 的内置原型。这意味着开发人员可以自定义或重写内置方法的行为，甚至可以添加新方法来执行有用的操作
+例如，现代 JavaScript 提供了字符串的方法，使你能够轻松删除任何前导或尾随空格。在引入此内置方法之前，开发人员有时会通过执行如下操作将自己对此行为的自定义实现添加到对象中：
+String.prototype.removeWhitespace = function(){// remove leading and trailing whitespace}
